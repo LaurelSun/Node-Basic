@@ -1,0 +1,111 @@
+db.test.group({
+	key:{cust_id:true},
+	initial:{price:0},
+	$reduce:function(doc,prev){
+		prev.price+=doc.price;
+	},
+	q:{price:{$lt:30}}
+})
+
+
+
+db.test.group({
+	key:{status:true},
+	initial:{count:0,price:0,avg:0},
+	$reduce:function(doc,prev){
+		prev.count+=1;
+		prev.price+=doc.price;
+	},
+	finalize:function(doc){
+		doc.avg=Math.round(doc.price/doc.count);
+	}
+})
+
+
+
+ 
+ 
+db.test.insert({cust_id:"abc",status:"A",price:19,ord_date:new Date()})
+db.test.insert({cust_id:"abc",status:"A",price:34,ord_date:new Date()})
+db.test.insert({cust_id:"de",status:"C",price:53,ord_date:new Date()})
+db.test.insert({cust_id:"ac",status:"A",price:254,ord_date:new Date()})
+db.test.insert({cust_id:"fg",status:"A",price:64,ord_date:new Date()})
+db.test.insert({cust_id:"fg",status:"B",price:13,ord_date:new Date()})
+db.test.insert({cust_id:"fg",status:"A",price:56,ord_date:new Date()})
+db.test.insert({cust_id:"abc",status:"A",price:245,ord_date:new Date()})
+db.test.insert({cust_id:"abc",status:"B",price:24,ord_date:new Date()})
+db.test.insert({cust_id:"de",status:"A",price:25,ord_date:new Date()})
+db.test.insert({cust_id:"de",status:"C",price:20,ord_date:new Date()})
+db.test.insert({cust_id:"ac",status:"A",price:75,ord_date:new Date()})
+db.test.insert({cust_id:"ac",status:"B",price:224,ord_date:new Date()})
+db.test.insert({cust_id:"ac",status:"A",price:75,ord_date:new Date()})
+db.test.insert({cust_id:"abc",status:"C",price:15,ord_date:new Date()})
+db.test.insert({cust_id:"fg",status:"B",price:73,ord_date:new Date()})
+db.test.insert({cust_id:"abc",status:"A",price:53,ord_date:new Date()})
+db.test.insert({cust_id:"de",status:"C",price:75,ord_date:new Date()})
+
+
+var map=function(){
+	emit(this.cust_id,{status:this.status,price:this.price});
+}
+
+var reduce=function(key,values){
+	var statsJson={};
+	var statusArr=new Array();
+
+	var totalPrice=0;
+	values.forEach(function(item){
+		totalPrice+=item.price;
+		if(!statsJson[item.status]){
+			statusArr.push(item.status);
+		}
+		else{
+			statsJson[item.status]=1;
+		}
+	})
+
+	var result={};
+	result.status=statusArr;
+	result.avgPrice=Math.round(totalPrice/stats.length);
+	return result;
+
+}
+
+db.runCommand({
+	mapreduce:"test",
+	map:map,
+	reduce:reduce,
+	out:'t_result'
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
